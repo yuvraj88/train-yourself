@@ -19,205 +19,306 @@ interface Dims {
 
 function dimsFor(gender: Gender): Dims {
   return gender === 'male'
-    ? { neckHalf: 13, shoulderHalf: 54, chestHalf: 44, waistHalf: 30, hipHalf: 33, armW: 17, forearmW: 14, thighW: 27, calfW: 16 }
-    : { neckHalf: 11, shoulderHalf: 40, chestHalf: 35, waistHalf: 24, hipHalf: 41, armW: 13, forearmW: 11, thighW: 25, calfW: 13 }
+    ? { neckHalf: 16, shoulderHalf: 66, chestHalf: 48, waistHalf: 29, hipHalf: 33, armW: 24, forearmW: 17, thighW: 31, calfW: 19 }
+    : { neckHalf: 12, shoulderHalf: 44, chestHalf: 35, waistHalf: 22, hipHalf: 40, armW: 16, forearmW: 12, thighW: 27, calfW: 14 }
 }
 
-const CX = 120
+const CX = 140
+const VIEW_BOX = '0 0 280 580'
 
 interface RegionProps {
+  dims: Dims
   active: MuscleId | null
-  hovered: MuscleId | null
   onSelect: (m: MuscleId) => void
   onHover: (m: MuscleId | null) => void
+}
+
+/** x(s, offset) mirrors a distance from center; s is -1 (left) or 1 (right) */
+function X(s: number, offset: number) {
+  return CX + s * offset
 }
 
 function Head({ shoulderHalf }: { shoulderHalf: number }) {
   return (
     <>
-      <ellipse cx={CX} cy={34} rx={22} ry={25} className="body-outline" />
+      <ellipse cx={CX} cy={34} rx={21} ry={25} className="body-outline" />
       <path
-        d={`M ${CX - 20} 78 Q ${CX} 60 ${CX + 20} 78 L ${CX + shoulderHalf} 96 Q ${CX} 84 ${CX - shoulderHalf} 96 Z`}
+        d={`M ${CX - 17} 76 Q ${CX} 62 ${CX + 17} 76 L ${CX + shoulderHalf * 0.55} 98 Q ${CX} 88 ${CX - shoulderHalf * 0.55} 98 Z`}
         className="body-outline"
       />
     </>
   )
 }
 
-function FrontBody({ dims, active, onSelect, onHover }: RegionProps & { dims: Dims }) {
-  const { neckHalf, shoulderHalf, chestHalf, waistHalf, armW, forearmW, thighW, calfW } = dims
+function DefLines({ d, opacity = 0.16 }: { d: string; opacity?: number }) {
+  return <path d={d} fill="none" stroke="#1f2328" strokeOpacity={opacity} strokeWidth={1.4} strokeLinecap="round" pointerEvents="none" />
+}
+
+function torsoOutline(dims: Dims) {
+  const { shoulderHalf, chestHalf, waistHalf, hipHalf } = dims
+  return `M ${X(-1, shoulderHalf)} 98
+    C ${X(-1, shoulderHalf - 8)} 122 ${X(-1, chestHalf + 4)} 132 ${X(-1, chestHalf - 6)} 158
+    C ${X(-1, waistHalf + 14)} 182 ${X(-1, waistHalf - 2)} 200 ${X(-1, waistHalf + 4)} 222
+    C ${X(-1, hipHalf + 6)} 232 ${X(-1, hipHalf)} 236 ${X(-1, hipHalf - 2)} 240
+    L ${X(1, hipHalf - 2)} 240
+    C ${X(1, hipHalf)} 236 ${X(1, hipHalf + 6)} 232 ${X(1, waistHalf + 4)} 222
+    C ${X(1, waistHalf - 2)} 200 ${X(1, waistHalf + 14)} 182 ${X(1, chestHalf - 6)} 158
+    C ${X(1, chestHalf + 4)} 132 ${X(1, shoulderHalf - 8)} 122 ${X(1, shoulderHalf)} 98
+    Z`
+}
+
+function pecPath(s: number, dims: Dims) {
+  const { shoulderHalf, chestHalf } = dims
+  return `M ${X(s, 6)} 100
+    C ${X(s, 10)} 88 ${X(s, chestHalf - 18)} 82 ${X(s, shoulderHalf - 20)} 100
+    C ${X(s, shoulderHalf - 14)} 118 ${X(s, chestHalf - 2)} 134 ${X(s, chestHalf - 10)} 155
+    C ${X(s, chestHalf - 24)} 172 ${X(s, 26)} 172 ${X(s, 12)} 160
+    C ${X(s, 4)} 145 ${X(s, 2)} 118 ${X(s, 6)} 100
+    Z`
+}
+
+function deltoidPath(s: number, dims: Dims) {
+  const { shoulderHalf } = dims
+  return `M ${X(s, shoulderHalf - 46)} 84
+    C ${X(s, shoulderHalf - 20)} 70 ${X(s, shoulderHalf + 14)} 84 ${X(s, shoulderHalf + 8)} 112
+    C ${X(s, shoulderHalf + 2)} 132 ${X(s, shoulderHalf - 34)} 134 ${X(s, shoulderHalf - 48)} 116
+    C ${X(s, shoulderHalf - 54)} 104 ${X(s, shoulderHalf - 54)} 92 ${X(s, shoulderHalf - 46)} 84
+    Z`
+}
+
+function bicepPath(s: number, dims: Dims) {
+  const { shoulderHalf, armW } = dims
+  return `M ${X(s, shoulderHalf - 30)} 114
+    C ${X(s, shoulderHalf + armW - 26)} 118 ${X(s, shoulderHalf + armW - 10)} 148 ${X(s, shoulderHalf + armW - 16)} 178
+    C ${X(s, shoulderHalf + armW - 20)} 198 ${X(s, shoulderHalf - 6)} 208 ${X(s, shoulderHalf - 16)} 204
+    C ${X(s, shoulderHalf - 26)} 184 ${X(s, shoulderHalf - 28)} 140 ${X(s, shoulderHalf - 30)} 114
+    Z`
+}
+
+function tricepPath(s: number, dims: Dims) {
+  const { shoulderHalf, armW } = dims
+  return `M ${X(s, shoulderHalf - 30)} 114
+    C ${X(s, shoulderHalf + armW - 22)} 120 ${X(s, shoulderHalf + armW - 12)} 150 ${X(s, shoulderHalf + armW - 18)} 176
+    C ${X(s, shoulderHalf + armW - 24)} 194 ${X(s, shoulderHalf - 8)} 206 ${X(s, shoulderHalf - 16)} 202
+    C ${X(s, shoulderHalf - 26)} 182 ${X(s, shoulderHalf - 28)} 140 ${X(s, shoulderHalf - 30)} 114
+    Z`
+}
+
+function forearmPath(s: number, dims: Dims) {
+  const { shoulderHalf, forearmW } = dims
+  return `M ${X(s, shoulderHalf - 16)} 206
+    C ${X(s, shoulderHalf + forearmW - 4)} 210 ${X(s, shoulderHalf + forearmW - 2)} 230 ${X(s, shoulderHalf + forearmW - 12)} 254
+    C ${X(s, shoulderHalf + forearmW - 18)} 275 ${X(s, shoulderHalf - 2)} 298 ${X(s, shoulderHalf - 6)} 302
+    L ${X(s, shoulderHalf - 20)} 300
+    C ${X(s, shoulderHalf - 28)} 270 ${X(s, shoulderHalf - 26)} 230 ${X(s, shoulderHalf - 16)} 206
+    Z`
+}
+
+function quadPath(s: number, dims: Dims) {
+  const { thighW } = dims
+  return `M ${X(s, 3)} 242
+    C ${X(s, thighW - 2)} 246 ${X(s, thighW + 10)} 290 ${X(s, thighW + 2)} 330
+    C ${X(s, thighW - 6)} 356 ${X(s, thighW - 16)} 368 ${X(s, 10)} 372
+    C ${X(s, 5)} 330 ${X(s, 3)} 285 ${X(s, 3)} 242
+    Z`
+}
+
+function hamstringPath(s: number, dims: Dims) {
+  const { thighW } = dims
+  return `M ${X(s, 4)} 292
+    C ${X(s, thighW - 2)} 296 ${X(s, thighW + 4)} 322 ${X(s, thighW - 2)} 348
+    C ${X(s, thighW - 10)} 364 ${X(s, 12)} 372 ${X(s, 8)} 370
+    C ${X(s, 4)} 344 ${X(s, 3)} 316 ${X(s, 4)} 292
+    Z`
+}
+
+function calfPath(s: number, dims: Dims) {
+  const { calfW } = dims
+  return `M ${X(s, 8)} 378
+    C ${X(s, calfW + 8)} 384 ${X(s, calfW + 16)} 412 ${X(s, calfW + 4)} 442
+    C ${X(s, calfW - 4)} 464 ${X(s, 8)} 476 ${X(s, 11)} 474
+    C ${X(s, 5)} 444 ${X(s, 4)} 408 ${X(s, 8)} 378
+    Z`
+}
+
+function Region({
+  d,
+  muscle,
+  active,
+  onSelect,
+  onHover,
+}: {
+  d: string
+  muscle: MuscleId
+  active: MuscleId | null
+  onSelect: (m: MuscleId) => void
+  onHover: (m: MuscleId | null) => void
+}) {
+  return (
+    <path
+      d={d}
+      className={active === muscle ? 'muscle-path is-active' : 'muscle-path'}
+      onClick={() => onSelect(muscle)}
+      onMouseEnter={() => onHover(muscle)}
+      onMouseLeave={() => onHover(null)}
+    />
+  )
+}
+
+function Feet() {
+  return (
+    <>
+      <ellipse cx={CX - 15} cy={492} rx={13} ry={9} className="body-outline" />
+      <ellipse cx={CX + 15} cy={492} rx={13} ry={9} className="body-outline" />
+    </>
+  )
+}
+
+function FrontBody({ dims, active, onSelect, onHover }: RegionProps) {
   const isSel = (id: MuscleId) => (active === id ? 'muscle-path is-active' : 'muscle-path')
+  const { neckHalf, waistHalf } = dims
+
+  // ab blocks: 3 rows x 2 columns, forming a defined six-pack
+  const abCols = [-1, 1]
+  const abRows = [0, 1, 2]
+  const abColW = 17
+  const abGap = 5
+  const abRowH = 21
+  const abRowGap = 4
+  const abTop = 160
 
   return (
     <g>
-      <Head shoulderHalf={shoulderHalf} />
+      <Head shoulderHalf={dims.shoulderHalf} />
 
-      {/* neck */}
-      <rect x={CX - neckHalf} y={54} width={neckHalf * 2} height={24} rx={6} className={isSel('neck')} onClick={() => onSelect('neck')} onMouseEnter={() => onHover('neck')} onMouseLeave={() => onHover(null)} />
-
-      {/* torso backdrop */}
-      <path
-        d={`M ${CX - shoulderHalf} 96 L ${CX - chestHalf} 150 L ${CX - waistHalf} 222 L ${CX - dims.hipHalf} 236 L ${CX + dims.hipHalf} 236 L ${CX + waistHalf} 222 L ${CX + chestHalf} 150 L ${CX + shoulderHalf} 96 Z`}
-        className="body-outline"
+      <rect
+        x={CX - neckHalf} y={56} width={neckHalf * 2} height={26} rx={7}
+        className={isSel('neck')}
+        onClick={() => onSelect('neck')} onMouseEnter={() => onHover('neck')} onMouseLeave={() => onHover(null)}
       />
 
-      {/* shoulders (deltoid caps) */}
-      <ellipse cx={CX - shoulderHalf + 14} cy={100} rx={18} ry={21} className={isSel('shoulders')} onClick={() => onSelect('shoulders')} onMouseEnter={() => onHover('shoulders')} onMouseLeave={() => onHover(null)} />
-      <ellipse cx={CX + shoulderHalf - 14} cy={100} rx={18} ry={21} className={isSel('shoulders')} onClick={() => onSelect('shoulders')} onMouseEnter={() => onHover('shoulders')} onMouseLeave={() => onHover(null)} />
+      <path d={torsoOutline(dims)} className="body-outline" />
 
-      {/* chest */}
-      <path
-        d={`M ${CX - chestHalf + 8} 96 Q ${CX} 88 ${CX + chestHalf - 8} 96 L ${CX + chestHalf - 12} 150 Q ${CX} 162 ${CX - chestHalf + 12} 150 Z`}
-        className={isSel('chest')}
-        onClick={() => onSelect('chest')}
-        onMouseEnter={() => onHover('chest')}
-        onMouseLeave={() => onHover(null)}
-      />
+      {[-1, 1].map((s) => <Region key={`sh${s}`} d={deltoidPath(s, dims)} muscle="shoulders" active={active} onSelect={onSelect} onHover={onHover} />)}
+      {[-1, 1].map((s) => <Region key={`ch${s}`} d={pecPath(s, dims)} muscle="chest" active={active} onSelect={onSelect} onHover={onHover} />)}
 
-      {/* abs */}
-      <rect x={CX - 20} y={152} width={40} height={70} rx={12} className={isSel('abs')} onClick={() => onSelect('abs')} onMouseEnter={() => onHover('abs')} onMouseLeave={() => onHover(null)} />
+      {abRows.map((row) =>
+        abCols.map((s) => (
+          <rect
+            key={`ab-${row}-${s}`}
+            x={s === -1 ? CX - abGap / 2 - abColW : CX + abGap / 2}
+            y={abTop + row * (abRowH + abRowGap)}
+            width={abColW}
+            height={abRowH}
+            rx={6}
+            className={isSel('abs')}
+            onClick={() => onSelect('abs')}
+            onMouseEnter={() => onHover('abs')}
+            onMouseLeave={() => onHover(null)}
+          />
+        )),
+      )}
 
-      {/* obliques */}
-      <path d={`M ${CX - waistHalf - 6} 154 L ${CX - 22} 152 L ${CX - 22} 220 L ${CX - waistHalf + 4} 220 Z`} className={isSel('obliques')} onClick={() => onSelect('obliques')} onMouseEnter={() => onHover('obliques')} onMouseLeave={() => onHover(null)} />
-      <path d={`M ${CX + waistHalf + 6} 154 L ${CX + 22} 152 L ${CX + 22} 220 L ${CX + waistHalf - 4} 220 Z`} className={isSel('obliques')} onClick={() => onSelect('obliques')} onMouseEnter={() => onHover('obliques')} onMouseLeave={() => onHover(null)} />
-
-      {/* biceps (upper arm) */}
       {[-1, 1].map((s) => (
         <path
-          key={s}
-          d={`M ${CX + s * (shoulderHalf - 6)} 108 L ${CX + s * (shoulderHalf + armW - 6)} 112 L ${CX + s * (shoulderHalf + armW - 14)} 206 L ${CX + s * (shoulderHalf - 14)} 202 Z`}
-          className={isSel('biceps')}
-          onClick={() => onSelect('biceps')}
-          onMouseEnter={() => onHover('biceps')}
+          key={`obl${s}`}
+          d={`M ${X(s, waistHalf - 2)} 160 C ${X(s, waistHalf + 4)} 185 ${X(s, waistHalf - 2)} 210 ${X(s, 26)} 226 L ${X(s, 22)} 164 Z`}
+          className={isSel('obliques')}
+          onClick={() => onSelect('obliques')}
+          onMouseEnter={() => onHover('obliques')}
           onMouseLeave={() => onHover(null)}
         />
       ))}
 
-      {/* forearms */}
+      {[-1, 1].map((s) => <Region key={`bi${s}`} d={bicepPath(s, dims)} muscle="biceps" active={active} onSelect={onSelect} onHover={onHover} />)}
+      {[-1, 1].map((s) => <Region key={`fa${s}`} d={forearmPath(s, dims)} muscle="forearms" active={active} onSelect={onSelect} onHover={onHover} />)}
+      {[-1, 1].map((s) => <Region key={`qu${s}`} d={quadPath(s, dims)} muscle="quads" active={active} onSelect={onSelect} onHover={onHover} />)}
+      {[-1, 1].map((s) => <Region key={`ca${s}`} d={calfPath(s, dims)} muscle="calves" active={active} onSelect={onSelect} onHover={onHover} />)}
+
+      {/* definition lines */}
+      <DefLines d={`M ${CX} 96 C ${CX} 118 ${CX} 138 ${CX} 160`} />
       {[-1, 1].map((s) => (
-        <path
-          key={s}
-          d={`M ${CX + s * (shoulderHalf - 14)} 208 L ${CX + s * (shoulderHalf + armW - 16)} 210 L ${CX + s * (shoulderHalf + forearmW - 22)} 300 L ${CX + s * (shoulderHalf - 20)} 298 Z`}
-          className={isSel('forearms')}
-          onClick={() => onSelect('forearms')}
-          onMouseEnter={() => onHover('forearms')}
-          onMouseLeave={() => onHover(null)}
-        />
+        <DefLines key={`bidef${s}`} d={`M ${X(s, dims.shoulderHalf - 14)} 140 C ${X(s, dims.shoulderHalf + dims.armW - 20)} 148 ${X(s, dims.shoulderHalf + dims.armW - 20)} 158 ${X(s, dims.shoulderHalf - 12)} 168`} />
+      ))}
+      {[-1, 1].map((s) => (
+        <DefLines key={`qudef${s}`} d={`M ${X(s, 14)} 258 C ${X(s, dims.thighW - 8)} 290 ${X(s, dims.thighW - 10)} 320 ${X(s, 16)} 356`} opacity={0.12} />
+      ))}
+      {[-1, 1].map((s) => (
+        <DefLines key={`cadef${s}`} d={`M ${X(s, dims.calfW - 4)} 388 C ${X(s, dims.calfW + 2)} 410 ${X(s, dims.calfW)} 432 ${X(s, dims.calfW - 6)} 456`} opacity={0.12} />
       ))}
 
-      {/* quads */}
-      {[-1, 1].map((s) => (
-        <path
-          key={s}
-          d={`M ${CX + s * 4} 238 L ${CX + s * (thighW + 4)} 240 L ${CX + s * (thighW - 6)} 366 L ${CX + s * 6} 366 Z`}
-          className={isSel('quads')}
-          onClick={() => onSelect('quads')}
-          onMouseEnter={() => onHover('quads')}
-          onMouseLeave={() => onHover(null)}
-        />
-      ))}
-
-      {/* calves front */}
-      {[-1, 1].map((s) => (
-        <path
-          key={s}
-          d={`M ${CX + s * 8} 372 L ${CX + s * (calfW + 6)} 374 L ${CX + s * calfW} 470 L ${CX + s * 10} 470 Z`}
-          className={isSel('calves')}
-          onClick={() => onSelect('calves')}
-          onMouseEnter={() => onHover('calves')}
-          onMouseLeave={() => onHover(null)}
-        />
-      ))}
-
-      {/* feet */}
-      <ellipse cx={CX - 14} cy={486} rx={13} ry={9} className="body-outline" />
-      <ellipse cx={CX + 14} cy={486} rx={13} ry={9} className="body-outline" />
+      <Feet />
     </g>
   )
 }
 
-function BackBody({ dims, active, onSelect, onHover }: RegionProps & { dims: Dims }) {
-  const { neckHalf, shoulderHalf, chestHalf, waistHalf, hipHalf, armW, forearmW, thighW, calfW } = dims
+function BackBody({ dims, active, onSelect, onHover }: RegionProps) {
   const isSel = (id: MuscleId) => (active === id ? 'muscle-path is-active' : 'muscle-path')
+  const { neckHalf, shoulderHalf, chestHalf, waistHalf, hipHalf } = dims
 
   return (
     <g>
       <Head shoulderHalf={shoulderHalf} />
 
-      <rect x={CX - neckHalf} y={54} width={neckHalf * 2} height={24} rx={6} className={isSel('neck')} onClick={() => onSelect('neck')} onMouseEnter={() => onHover('neck')} onMouseLeave={() => onHover(null)} />
-
-      <path
-        d={`M ${CX - shoulderHalf} 96 L ${CX - chestHalf} 150 L ${CX - waistHalf} 222 L ${CX - hipHalf} 236 L ${CX + hipHalf} 236 L ${CX + waistHalf} 222 L ${CX + chestHalf} 150 L ${CX + shoulderHalf} 96 Z`}
-        className="body-outline"
+      <rect
+        x={CX - neckHalf} y={56} width={neckHalf * 2} height={26} rx={7}
+        className={isSel('neck')}
+        onClick={() => onSelect('neck')} onMouseEnter={() => onHover('neck')} onMouseLeave={() => onHover(null)}
       />
 
-      {/* shoulders (rear delts) */}
-      <ellipse cx={CX - shoulderHalf + 14} cy={100} rx={18} ry={21} className={isSel('shoulders')} onClick={() => onSelect('shoulders')} onMouseEnter={() => onHover('shoulders')} onMouseLeave={() => onHover(null)} />
-      <ellipse cx={CX + shoulderHalf - 14} cy={100} rx={18} ry={21} className={isSel('shoulders')} onClick={() => onSelect('shoulders')} onMouseEnter={() => onHover('shoulders')} onMouseLeave={() => onHover(null)} />
+      <path d={torsoOutline(dims)} className="body-outline" />
 
-      {/* traps */}
-      <path d={`M ${CX - shoulderHalf + 16} 92 L ${CX} 78 L ${CX + shoulderHalf - 16} 92 L ${CX + 18} 140 L ${CX - 18} 140 Z`} className={isSel('traps')} onClick={() => onSelect('traps')} onMouseEnter={() => onHover('traps')} onMouseLeave={() => onHover(null)} />
+      {[-1, 1].map((s) => <Region key={`sh${s}`} d={deltoidPath(s, dims)} muscle="shoulders" active={active} onSelect={onSelect} onHover={onHover} />)}
 
-      {/* back / lats */}
-      <path d={`M ${CX - chestHalf + 10} 142 L ${CX - 18} 140 L ${CX - 16} 210 L ${CX - waistHalf + 6} 216 Z`} className={isSel('back')} onClick={() => onSelect('back')} onMouseEnter={() => onHover('back')} onMouseLeave={() => onHover(null)} />
-      <path d={`M ${CX + chestHalf - 10} 142 L ${CX + 18} 140 L ${CX + 16} 210 L ${CX + waistHalf - 6} 216 Z`} className={isSel('back')} onClick={() => onSelect('back')} onMouseEnter={() => onHover('back')} onMouseLeave={() => onHover(null)} />
+      <path
+        d={`M ${X(-1, shoulderHalf - 30)} 96 Q ${CX} 78 ${X(1, shoulderHalf - 30)} 96
+            C ${X(1, 26)} 118 ${X(1, 14)} 140 ${CX} 148
+            C ${X(-1, 14)} 140 ${X(-1, 26)} 118 ${X(-1, shoulderHalf - 30)} 96 Z`}
+        className={isSel('traps')}
+        onClick={() => onSelect('traps')} onMouseEnter={() => onHover('traps')} onMouseLeave={() => onHover(null)}
+      />
 
-      {/* lower back */}
-      <rect x={CX - 16} y={212} width={32} height={24} rx={8} className={isSel('lower_back')} onClick={() => onSelect('lower_back')} onMouseEnter={() => onHover('lower_back')} onMouseLeave={() => onHover(null)} />
-
-      {/* glutes */}
-      <path d={`M ${CX - hipHalf + 2} 238 Q ${CX} 226 ${CX + hipHalf - 2} 238 L ${CX + hipHalf - 6} 284 Q ${CX} 296 ${CX - hipHalf + 6} 284 Z`} className={isSel('glutes')} onClick={() => onSelect('glutes')} onMouseEnter={() => onHover('glutes')} onMouseLeave={() => onHover(null)} />
-
-      {/* triceps */}
       {[-1, 1].map((s) => (
         <path
-          key={s}
-          d={`M ${CX + s * (shoulderHalf - 6)} 108 L ${CX + s * (shoulderHalf + armW - 6)} 112 L ${CX + s * (shoulderHalf + armW - 14)} 206 L ${CX + s * (shoulderHalf - 14)} 202 Z`}
-          className={isSel('triceps')}
-          onClick={() => onSelect('triceps')}
-          onMouseEnter={() => onHover('triceps')}
-          onMouseLeave={() => onHover(null)}
+          key={`lat${s}`}
+          d={`M ${X(s, chestHalf - 12)} 142
+              C ${X(s, chestHalf + 2)} 164 ${X(s, chestHalf - 4)} 192 ${X(s, waistHalf + 8)} 218
+              C ${X(s, waistHalf - 8)} 212 ${X(s, 14)} 198 ${X(s, 13)} 172
+              C ${X(s, 12)} 156 ${X(s, 16)} 148 ${X(s, chestHalf - 12)} 142 Z`}
+          className={isSel('back')}
+          onClick={() => onSelect('back')} onMouseEnter={() => onHover('back')} onMouseLeave={() => onHover(null)}
         />
       ))}
 
-      {/* forearms */}
+      <rect x={CX - 17} y={216} width={34} height={26} rx={9} className={isSel('lower_back')} onClick={() => onSelect('lower_back')} onMouseEnter={() => onHover('lower_back')} onMouseLeave={() => onHover(null)} />
+
+      <path
+        d={`M ${X(-1, hipHalf - 2)} 240 Q ${CX} 224 ${X(1, hipHalf - 2)} 240
+            C ${X(1, hipHalf - 4)} 268 ${X(1, hipHalf - 14)} 290 ${CX} 296
+            C ${X(-1, hipHalf - 14)} 290 ${X(-1, hipHalf - 4)} 268 ${X(-1, hipHalf - 2)} 240 Z`}
+        className={isSel('glutes')}
+        onClick={() => onSelect('glutes')} onMouseEnter={() => onHover('glutes')} onMouseLeave={() => onHover(null)}
+      />
+
+      {[-1, 1].map((s) => <Region key={`tr${s}`} d={tricepPath(s, dims)} muscle="triceps" active={active} onSelect={onSelect} onHover={onHover} />)}
+      {[-1, 1].map((s) => <Region key={`fa${s}`} d={forearmPath(s, dims)} muscle="forearms" active={active} onSelect={onSelect} onHover={onHover} />)}
+      {[-1, 1].map((s) => <Region key={`ha${s}`} d={hamstringPath(s, dims)} muscle="hamstrings" active={active} onSelect={onSelect} onHover={onHover} />)}
+      {[-1, 1].map((s) => <Region key={`ca${s}`} d={calfPath(s, dims)} muscle="calves" active={active} onSelect={onSelect} onHover={onHover} />)}
+
+      {/* definition lines */}
+      <DefLines d={`M ${CX} 232 C ${CX} 252 ${CX} 270 ${CX} 288`} opacity={0.14} />
+      <DefLines d={`M ${CX} 84 C ${CX} 106 ${CX} 124 ${CX} 144`} opacity={0.14} />
       {[-1, 1].map((s) => (
-        <path
-          key={s}
-          d={`M ${CX + s * (shoulderHalf - 14)} 208 L ${CX + s * (shoulderHalf + armW - 16)} 210 L ${CX + s * (shoulderHalf + forearmW - 22)} 300 L ${CX + s * (shoulderHalf - 20)} 298 Z`}
-          className={isSel('forearms')}
-          onClick={() => onSelect('forearms')}
-          onMouseEnter={() => onHover('forearms')}
-          onMouseLeave={() => onHover(null)}
-        />
+        <DefLines key={`tridef${s}`} d={`M ${X(s, shoulderHalf - 14)} 140 C ${X(s, shoulderHalf + dims.armW - 20)} 148 ${X(s, shoulderHalf + dims.armW - 20)} 158 ${X(s, shoulderHalf - 12)} 168`} />
+      ))}
+      {[-1, 1].map((s) => (
+        <DefLines key={`hadef${s}`} d={`M ${X(s, 16)} 300 C ${X(s, dims.thighW - 8)} 320 ${X(s, dims.thighW - 10)} 340 ${X(s, 16)} 360`} opacity={0.12} />
+      ))}
+      {[-1, 1].map((s) => (
+        <DefLines key={`cadef${s}`} d={`M ${X(s, dims.calfW - 4)} 392 C ${X(s, dims.calfW + 2)} 414 ${X(s, dims.calfW)} 436 ${X(s, dims.calfW - 6)} 458`} opacity={0.12} />
       ))}
 
-      {/* hamstrings */}
-      {[-1, 1].map((s) => (
-        <path
-          key={s}
-          d={`M ${CX + s * 4} 288 L ${CX + s * (thighW + 4)} 290 L ${CX + s * (thighW - 6)} 366 L ${CX + s * 6} 366 Z`}
-          className={isSel('hamstrings')}
-          onClick={() => onSelect('hamstrings')}
-          onMouseEnter={() => onHover('hamstrings')}
-          onMouseLeave={() => onHover(null)}
-        />
-      ))}
-
-      {/* calves back */}
-      {[-1, 1].map((s) => (
-        <path
-          key={s}
-          d={`M ${CX + s * 8} 372 L ${CX + s * (calfW + 6)} 374 L ${CX + s * calfW} 470 L ${CX + s * 10} 470 Z`}
-          className={isSel('calves')}
-          onClick={() => onSelect('calves')}
-          onMouseEnter={() => onHover('calves')}
-          onMouseLeave={() => onHover(null)}
-        />
-      ))}
-
-      <ellipse cx={CX - 14} cy={486} rx={13} ry={9} className="body-outline" />
-      <ellipse cx={CX + 14} cy={486} rx={13} ry={9} className="body-outline" />
+      <Feet />
     </g>
   )
 }
@@ -236,15 +337,15 @@ export default function BodyMap({ gender, view, active, onSelect }: BodyMapProps
 
   return (
     <div className="relative flex flex-col items-center">
-      <svg viewBox="0 0 240 560" className="w-full max-w-[280px] select-none" role="img" aria-label={`${gender} body, ${view} view`}>
+      <svg viewBox={VIEW_BOX} className="w-full max-w-[300px] select-none" role="img" aria-label={`${gender} body, ${view} view`}>
         {view === 'front' ? (
-          <FrontBody dims={dims} active={active} hovered={hovered} onSelect={onSelect} onHover={setHovered} />
+          <FrontBody dims={dims} active={active} onSelect={onSelect} onHover={setHovered} />
         ) : (
-          <BackBody dims={dims} active={active} hovered={hovered} onSelect={onSelect} onHover={setHovered} />
+          <BackBody dims={dims} active={active} onSelect={onSelect} onHover={setHovered} />
         )}
       </svg>
       <div className="h-6 text-sm font-medium text-[var(--color-clay)] tracking-wide">
-        {label ?? ' '}
+        {label ?? ' '}
       </div>
     </div>
   )
