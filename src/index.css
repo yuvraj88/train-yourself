@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+
+  --color-paper: #faf9f6;
+  --color-surface: #ffffff;
+  --color-ink: #1f2328;
+  --color-ink-soft: #6b7280;
+  --color-line: #e8e6df;
+  --color-sage: #6b8f71;
+  --color-sage-soft: #eef3ee;
+  --color-clay: #c96f4a;
+  --color-clay-soft: #fbeee7;
+  --color-gold: #cf9b3b;
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--color-sage-soft);
+  color: var(--color-ink);
+}
+
+/* muscle map interactions */
+.muscle-path {
+  fill: #d7cfc0;
+  stroke: #faf9f6;
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill 0.15s ease;
+}
+
+.muscle-path:hover {
+  fill: var(--color-gold);
+}
+
+.muscle-path.is-active {
+  fill: var(--color-clay);
+}
+
+.body-outline {
+  fill: #efece3;
+  stroke: #d9d4c6;
+  stroke-width: 1;
+}
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
