@@ -47,19 +47,6 @@ function Head() {
   )
 }
 
-function JointDot({ cx, cy, r = 7 }: { cx: number; cy: number; r?: number }) {
-  return (
-    <g pointerEvents="none">
-      <circle cx={cx} cy={cy} r={r * 2.4} fill="url(#jointGlow)" opacity={0.55} />
-      <circle cx={cx} cy={cy} r={r * 0.4} fill="var(--color-ink)" opacity={0.28} />
-    </g>
-  )
-}
-
-function DefLines({ d, opacity = 0.32 }: { d: string; opacity?: number }) {
-  return <path d={d} fill="none" stroke="#1f2328" strokeOpacity={opacity} strokeWidth={1.4} strokeLinecap="round" pointerEvents="none" />
-}
-
 function torsoOutline(dims: Dims) {
   const { shoulderHalf, chestHalf, waistHalf, hipHalf } = dims
   return `M ${X(-1, shoulderHalf)} 158
@@ -188,7 +175,7 @@ function Feet() {
 
 function FrontBody({ dims, active, onSelect, onHover }: RegionProps) {
   const isSel = (id: MuscleId) => (active === id ? 'muscle-path is-active' : 'muscle-path')
-  const { neckHalf, shoulderHalf, waistHalf, armW, calfW, thighW } = dims
+  const { neckHalf, waistHalf } = dims
 
   const abCols = [-1, 1]
   const abRows = [0, 1, 2]
@@ -246,42 +233,6 @@ function FrontBody({ dims, active, onSelect, onHover }: RegionProps) {
       {[-1, 1].map((s) => <Region key={`qu${s}`} d={quadPath(s, dims)} muscle="quads" active={active} onSelect={onSelect} onHover={onHover} />)}
       {[-1, 1].map((s) => <Region key={`ca${s}`} d={calfPath(s, dims)} muscle="calves" active={active} onSelect={onSelect} onHover={onHover} />)}
 
-      {/* definition lines */}
-      <DefLines d={`M ${CX} 162 C ${CX} 200 ${CX} 240 ${CX} 278`} />
-      {[-1, 1].map((s) => (
-        <DefLines key={`deltdef${s}`} d={`M ${X(s, shoulderHalf - 50)} 158 C ${X(s, shoulderHalf - 22)} 168 ${X(s, shoulderHalf)} 182 ${X(s, shoulderHalf + 6)} 198`} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`pecdef1-${s}`} d={`M ${X(s, 10)} 180 C ${X(s, 30)} 190 ${X(s, 50)} 205 ${X(s, 60)} 220`} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`pecdef2-${s}`} d={`M ${X(s, 14)} 212 C ${X(s, 34)} 224 ${X(s, 50)} 238 ${X(s, 58)} 252`} opacity={0.24} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`obldef${s}`} d={`M ${X(s, waistHalf - 4)} 286 C ${X(s, waistHalf + 2)} 306 ${X(s, 32)} 320 ${X(s, 28)} 340`} opacity={0.24} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`bidef${s}`} d={`M ${X(s, shoulderHalf - 22)} 232 C ${X(s, shoulderHalf + armW - 32)} 244 ${X(s, shoulderHalf + armW - 32)} 258 ${X(s, shoulderHalf - 18)} 270`} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`qudef${s}`} d={`M ${X(s, 22)} 420 C ${X(s, thighW - 10)} 470 ${X(s, thighW - 16)} 520 ${X(s, 24)} 588`} opacity={0.22} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`qudef2-${s}`} d={`M ${X(s, thighW - 20)} 400 C ${X(s, thighW + 4)} 460 ${X(s, thighW - 4)} 520 ${X(s, thighW - 24)} 580`} opacity={0.16} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`cadef${s}`} d={`M ${X(s, calfW - 4)} 660 C ${X(s, calfW + 4)} 692 ${X(s, calfW)} 724 ${X(s, calfW - 8)} 764`} opacity={0.22} />
-      ))}
-
-      <JointDot cx={X(-1, shoulderHalf - 20)} cy={172} />
-      <JointDot cx={X(1, shoulderHalf - 20)} cy={172} />
-      <JointDot cx={X(-1, shoulderHalf - 40)} cy={330} r={6} />
-      <JointDot cx={X(1, shoulderHalf - 40)} cy={330} r={6} />
-      <JointDot cx={X(-1, waistHalf + 6)} cy={378} r={6} />
-      <JointDot cx={X(1, waistHalf + 6)} cy={378} r={6} />
-      <JointDot cx={X(-1, 16)} cy={614} r={6} />
-      <JointDot cx={X(1, 16)} cy={614} r={6} />
-
       <Feet />
     </g>
   )
@@ -289,7 +240,7 @@ function FrontBody({ dims, active, onSelect, onHover }: RegionProps) {
 
 function BackBody({ dims, active, onSelect, onHover }: RegionProps) {
   const isSel = (id: MuscleId) => (active === id ? 'muscle-path is-active' : 'muscle-path')
-  const { neckHalf, shoulderHalf, chestHalf, waistHalf, hipHalf, armW, calfW, thighW } = dims
+  const { neckHalf, shoulderHalf, chestHalf, waistHalf, hipHalf } = dims
 
   return (
     <g>
@@ -344,43 +295,6 @@ function BackBody({ dims, active, onSelect, onHover }: RegionProps) {
       {[-1, 1].map((s) => <Region key={`ha${s}`} d={hamstringPath(s, dims)} muscle="hamstrings" active={active} onSelect={onSelect} onHover={onHover} />)}
       {[-1, 1].map((s) => <Region key={`ca${s}`} d={calfPath(s, dims)} muscle="calves" active={active} onSelect={onSelect} onHover={onHover} />)}
 
-      {/* definition lines */}
-      <DefLines d={`M ${CX} 380 C ${CX} 404 ${CX} 424 ${CX} 448`} opacity={0.24} />
-      <DefLines d={`M ${CX} 140 C ${CX} 168 ${CX} 190 ${CX} 232`} opacity={0.24} />
-      {[-1, 1].map((s) => (
-        <DefLines key={`deltdef${s}`} d={`M ${X(s, shoulderHalf - 50)} 158 C ${X(s, shoulderHalf - 22)} 168 ${X(s, shoulderHalf)} 182 ${X(s, shoulderHalf + 6)} 198`} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`trapdef${s}`} d={`M ${X(s, shoulderHalf - 40)} 168 C ${X(s, 30)} 190 ${X(s, 20)} 210 ${X(s, 10)} 228`} opacity={0.24} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`latdef1-${s}`} d={`M ${X(s, chestHalf - 20)} 236 C ${X(s, chestHalf - 10)} 264 ${X(s, waistHalf + 20)} 296 ${X(s, waistHalf + 6)} 322`} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`latdef2-${s}`} d={`M ${X(s, 22)} 250 C ${X(s, 18)} 276 ${X(s, 20)} 300 ${X(s, 26)} 318`} opacity={0.2} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`tridef${s}`} d={`M ${X(s, shoulderHalf - 22)} 232 C ${X(s, shoulderHalf + armW - 32)} 244 ${X(s, shoulderHalf + armW - 32)} 258 ${X(s, shoulderHalf - 18)} 270`} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`glutdef${s}`} d={`M ${X(s, hipHalf - 14)} 386 C ${X(s, hipHalf - 20)} 408 ${X(s, 20)} 428 ${X(s, 14)} 444`} opacity={0.2} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`hadef${s}`} d={`M ${X(s, 24)} 460 C ${X(s, thighW - 10)} 490 ${X(s, thighW - 16)} 520 ${X(s, 24)} 580`} opacity={0.22} />
-      ))}
-      {[-1, 1].map((s) => (
-        <DefLines key={`cadef${s}`} d={`M ${X(s, calfW - 4)} 664 C ${X(s, calfW + 4)} 696 ${X(s, calfW)} 728 ${X(s, calfW - 8)} 768`} opacity={0.22} />
-      ))}
-
-      <JointDot cx={X(-1, shoulderHalf - 20)} cy={172} />
-      <JointDot cx={X(1, shoulderHalf - 20)} cy={172} />
-      <JointDot cx={X(-1, shoulderHalf - 40)} cy={330} r={6} />
-      <JointDot cx={X(1, shoulderHalf - 40)} cy={330} r={6} />
-      <JointDot cx={X(-1, hipHalf - 24)} cy={382} r={6} />
-      <JointDot cx={X(1, hipHalf - 24)} cy={382} r={6} />
-      <JointDot cx={X(-1, 16)} cy={612} r={6} />
-      <JointDot cx={X(1, 16)} cy={612} r={6} />
-
       <Feet />
     </g>
   )
@@ -401,12 +315,6 @@ export default function BodyMap({ gender, view, active, onSelect }: BodyMapProps
   return (
     <div className="relative flex flex-col items-center">
       <svg viewBox={VIEW_BOX} className="w-full max-w-[320px] select-none" role="img" aria-label={`${gender} body, ${view} view`}>
-        <defs>
-          <radialGradient id="jointGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="var(--color-clay)" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="var(--color-clay)" stopOpacity="0" />
-          </radialGradient>
-        </defs>
         {view === 'front' ? (
           <FrontBody dims={dims} active={active} onSelect={onSelect} onHover={setHovered} />
         ) : (
