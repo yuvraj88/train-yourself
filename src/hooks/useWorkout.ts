@@ -46,6 +46,17 @@ export function useWorkout() {
     ])
   }
 
+  function generateDraft(exercises: Exercise[]) {
+    setDraft(
+      exercises.map((exercise, i) => ({
+        key: `${exercise.id}-${Date.now()}-${i}`,
+        exercise,
+        sets: exercise.sets,
+        reps: exercise.reps,
+      })),
+    )
+  }
+
   function removeItem(key: string) {
     setDraft((d) => d.filter((i) => i.key !== key))
   }
@@ -74,5 +85,5 @@ export function useWorkout() {
     if (w) setDraft(w.items)
   }
 
-  return { draft, saved, addExercise, removeItem, updateItem, clearDraft, saveWorkout, deleteSaved, loadSaved }
+  return { draft, saved, addExercise, generateDraft, removeItem, updateItem, clearDraft, saveWorkout, deleteSaved, loadSaved }
 }
