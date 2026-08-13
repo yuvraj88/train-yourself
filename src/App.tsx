@@ -3,6 +3,7 @@ import BodyMap from './components/BodyMap'
 import type { Gender, View } from './components/BodyMap'
 import ExercisePanel from './components/ExercisePanel'
 import WorkoutDrawer from './components/WorkoutDrawer'
+import WorkoutGeneratorModal from './components/WorkoutGeneratorModal'
 import { useWorkout } from './hooks/useWorkout'
 import type { MuscleId } from './data/muscles'
 
@@ -37,6 +38,7 @@ function App() {
   const [view, setView] = useState<View>('front')
   const [activeMuscle, setActiveMuscle] = useState<MuscleId | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [generatorOpen, setGeneratorOpen] = useState(false)
 
   const workout = useWorkout()
 
@@ -47,17 +49,25 @@ function App() {
           <h1 className="text-xl font-semibold tracking-tight text-[var(--color-ink)]">Train Yourself</h1>
           <p className="text-xs text-[var(--color-ink-soft)] mt-0.5">Tap a muscle. Get the moves.</p>
         </div>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="relative flex items-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] pl-4 pr-3 py-2 text-sm font-medium hover:border-[var(--color-ink)] transition-colors"
-        >
-          My Workout
-          {workout.draft.length > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-clay)] text-white text-xs px-1.5">
-              {workout.draft.length}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setGeneratorOpen(true)}
+            className="rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium hover:border-[var(--color-ink)] transition-colors"
+          >
+            Generate Workout
+          </button>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="relative flex items-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] pl-4 pr-3 py-2 text-sm font-medium hover:border-[var(--color-ink)] transition-colors"
+          >
+            My Workout
+            {workout.draft.length > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-clay)] text-white text-xs px-1.5">
+                {workout.draft.length}
+              </span>
+            )}
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] max-w-6xl w-full mx-auto">
@@ -104,6 +114,16 @@ function App() {
         onSave={workout.saveWorkout}
         onDeleteSaved={workout.deleteSaved}
         onLoadSaved={workout.loadSaved}
+      />
+
+      <WorkoutGeneratorModal
+        open={generatorOpen}
+        onClose={() => setGeneratorOpen(false)}
+        onGenerate={(exercises) => {
+          workout.generateDraft(exercises)
+          setGeneratorOpen(false)
+          setDrawerOpen(true)
+        }}
       />
     </div>
   )
