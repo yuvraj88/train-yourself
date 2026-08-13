@@ -44,26 +44,24 @@ body {
 
 /* muscle map interactions */
 .muscle-path {
-  fill: rgba(31, 35, 40, 0.035);
-  stroke: rgba(31, 35, 40, 0.4);
-  stroke-width: 1.1;
+  fill: #ded6c7;
+  stroke: var(--color-paper);
+  stroke-width: 1.5;
   cursor: pointer;
-  transition: fill 0.2s ease, stroke 0.2s ease;
+  transition: fill 0.15s ease;
 }
 
 .muscle-path:hover {
-  fill: rgba(207, 155, 59, 0.4);
-  stroke: rgba(207, 155, 59, 0.7);
+  fill: var(--color-gold);
 }
 
 .muscle-path.is-active {
-  fill: rgba(201, 111, 74, 0.55);
-  stroke: rgba(201, 111, 74, 0.85);
+  fill: var(--color-clay);
 }
 
 .body-outline {
-  fill: var(--color-paper);
-  stroke: rgba(31, 35, 40, 0.45);
+  fill: #f1eee5;
+  stroke: #ddd8c9;
   stroke-width: 1.3;
 }
 
